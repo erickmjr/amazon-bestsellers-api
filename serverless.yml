@@ -5,6 +5,16 @@ provider:
   name: aws
   runtime: nodejs18.x
   region: sa-east-1
+  enviroment:
+    TABLE_NAME: ${self:service}-bestsellers-${sls:stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.TABLE_NAME}
 
 plugins:
   - serverless-esbuild
@@ -24,3 +34,27 @@ functions:
       - httpApi:
           path: /health
           method: GET
+  getBestsellers:
+    handler: src/handler.getBestsellers
+    events: 
+      - httpApi:
+          path: /bestsellers
+          method: GET
+
+resources:
+  Resources:
+    BestsellersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions: 
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
