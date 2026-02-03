@@ -1,12 +1,21 @@
 service: amazon-bestsellers-api
 frameworkVersion: "3"
 
+custom:
+  tableName: ${self:service}-bestsellers-${sls:stage}
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node18
+    platform: node
+
 provider:
   name: aws
   runtime: nodejs18.x
   region: sa-east-1
-  enviroment:
-    TABLE_NAME: ${self:service}-bestsellers-${sls:stage}
+  environment:
+    TABLE_NAME: ${self:custom.tableName}
   iam:
     role:
       statements:
@@ -14,18 +23,11 @@ provider:
           Action:
             - dynamodb:GetItem
           Resource:
-            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.TABLE_NAME}
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tableName}
 
 plugins:
   - serverless-esbuild
 
-custom:
-  esbuild:
-    bundle: true
-    minify: false
-    sourcemap: true
-    target: node18
-    platform: node
 
 functions:
   health:
@@ -46,7 +48,7 @@ resources:
     BestsellersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.TABLE_NAME}
+        TableName: ${self:custom.tableName}
         BillingMode: PAY_PER_REQUEST
         AttributeDefinitions: 
           - AttributeName: pk
