@@ -1,0 +1,26 @@
+service: amazon-bestsellers-api
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: sa-east-1
+
+plugins:
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node18
+    platform: node
+
+functions:
+  health:
+    handler: src/handler.health
+    events:
+      - httpApi:
+          path: /health
+          method: GET
