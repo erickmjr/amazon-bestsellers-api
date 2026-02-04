@@ -44,10 +44,10 @@ functions:
           path: /bestsellers
           method: GET
   refreshBestsellers:
-    handler: src/handlet.refreshBestsellers
+    handler: src/handler.refreshBestsellers
     timeout: 30
     events:
-      - schedule: rate(6 hours)
+      - schedule: rate(12 hours)
 
 resources:
   Resources:
