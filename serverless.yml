@@ -22,6 +22,7 @@ provider:
         - Effect: Allow
           Action:
             - dynamodb:GetItem
+            - dynamodb:PutItem
           Resource:
             - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.tableName}
 
@@ -42,6 +43,11 @@ functions:
       - httpApi:
           path: /bestsellers
           method: GET
+  refreshBestsellers:
+    handler: src/handlet.refreshBestsellers
+    timeout: 30
+    events:
+      - schedule: rate(6 hours)
 
 resources:
   Resources:
