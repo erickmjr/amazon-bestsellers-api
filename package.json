@@ -13,7 +13,8 @@
     "@aws-sdk/client-dynamodb": "^3.967.0",
     "@aws-sdk/lib-dynamodb": "^3.967.0",
     "@middy/core": "^3.4.0",
-    "@middy/http-json-body-parser": "^3.4.0"
+    "@middy/http-json-body-parser": "^3.4.0",
+    "puppeteer": "^24.36.1"
   },
   "devDependencies": {
     "@serverless/typescript": "^3.0.0",
