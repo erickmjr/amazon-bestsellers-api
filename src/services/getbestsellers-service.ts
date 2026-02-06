@@ -1,5 +1,5 @@
 import { HttpResponse } from "../helpers/httpResponse";
-import { getAllBestsellers, getBestsellersByCategory } from "../repositories/bestsellers-repository";
+import { getAllBestsellers, getBestsellersByCategory, getFirstBestsellers } from "../repositories/bestsellers-repository";
 
 export const getAllBestsellersService = async (): Promise<HttpResponse> => {
 
@@ -27,7 +27,7 @@ export const getAllBestsellersService = async (): Promise<HttpResponse> => {
     }
 }
 
-export const getBestsellersByCategoryService = async (category: string) => {
+export const getBestsellersByCategoryService = async (category: string): Promise<HttpResponse> => {
     try {
 
         const bestsellers = await getBestsellersByCategory(category);
@@ -42,6 +42,31 @@ export const getBestsellersByCategoryService = async (category: string) => {
         return {
             statusCode: 200,
             body: JSON.stringify(bestsellers)
+        }
+
+    } catch {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error.' })
+        }
+    }
+}
+
+export const getFirstTopBestsellersService = async (): Promise<HttpResponse> => {
+    try {
+
+        const firstBestsellers = await getFirstBestsellers();
+
+        if (!firstBestsellers) {
+            return {
+                statusCode: 404,
+                body: JSON.stringify({ message: 'Not found.' })
+            }
+        }
+
+        return {
+            statusCode: 200,
+            body: JSON.stringify(firstBestsellers)
         }
 
     } catch {

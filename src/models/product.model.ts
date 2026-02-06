@@ -24,4 +24,5 @@ export type ProductsByCategory = Record<string, Product[]>;
 
 export type BestsellersData = {
     categories: ProductsByCategory;
+    categoryOrder: string[];
 };

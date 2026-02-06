@@ -1,6 +1,14 @@
 import { APIGatewayProxyEventV2 } from "aws-lambda";
-import { getBestsellersController } from "src/controllers/getbestsellers-controller"
+import { getAllBestsellersController, getBestsellersByCategoryController, getFirstTopBestsellersController } from "src/controllers/getbestsellers-controller"
 
-export const getBestsellers = async (event: APIGatewayProxyEventV2) => {
-  return getBestsellersController(event);
+export const getBestsellers = async () => {
+  return getAllBestsellersController();
+}
+
+export const getFirstTopBestsellers = async () => {
+  return getFirstTopBestsellersController();
+}
+
+export const getBestsellersByCategory = async(event: APIGatewayProxyEventV2) => {
+  return getBestsellersByCategoryController(event);
 }

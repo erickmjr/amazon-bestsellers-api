@@ -2,15 +2,10 @@
 import { saveLatestBestsellers } from "../repositories/bestsellers-repository";
 import { extractCategoriesFromRefreshPayload } from "../utils/refresh-payload";
 
-const MAX_PRODUCTS_PER_CATEGORY = 3;
-
 export const refreshBestsellersService = async (
   body: unknown
 ): Promise<HttpResponse> => {
-  const payloadResult = extractCategoriesFromRefreshPayload(
-    body,
-    MAX_PRODUCTS_PER_CATEGORY
-  );
+  const payloadResult = extractCategoriesFromRefreshPayload(body);
 
   if (payloadResult.ok === false) {
     return {
@@ -20,7 +15,7 @@ export const refreshBestsellersService = async (
   }
 
   try {
-    await saveLatestBestsellers(payloadResult.categories);
+    await saveLatestBestsellers(payloadResult.categories, payloadResult.categoryOrder);
 
     return {
       statusCode: 200,

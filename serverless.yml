@@ -45,8 +45,17 @@ functions:
       - httpApi:
           path: /bestsellers
           method: GET
+  getBestsellersByCategory:
+    handler: src/handlers/get-bestsellers.getBestsellersByCategory
+    events: 
       - httpApi:
           path: /bestsellers/{category}
+          method: GET
+  getFirstTopBestsellers:
+    handler: src/handlers/get-bestsellers.getFirstTopBestsellers
+    events:
+      - httpApi:
+          path: /bestsellers/first-top
           method: GET
   refreshBestsellers:
     handler: src/handlers/refresh-bestsellers.refreshBestsellers
