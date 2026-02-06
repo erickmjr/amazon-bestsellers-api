@@ -4,7 +4,7 @@
   "description": "Serverless aws-nodejs-typescript template",
   "main": "serverless.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "scrape": "ts-node src/scripts/scrapeData.ts"
   },
   "engines": {
     "node": ">=14.15.0"
@@ -14,6 +14,8 @@
     "@aws-sdk/lib-dynamodb": "^3.967.0",
     "@middy/core": "^3.4.0",
     "@middy/http-json-body-parser": "^3.4.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.5",
     "puppeteer": "^24.36.1"
   },
   "devDependencies": {
