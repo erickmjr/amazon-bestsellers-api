@@ -189,23 +189,20 @@ export async function scrapeBestSellers(): Promise<BestsellersData> {
       timeout: 45_000,
     });
 
-    const cards = await scrapeCardsFromPage(page);
-    const products: Product[] = [];
-
-    for (const card of cards) {
-      const product = mapCardToProduct(card);
-      if (product) products.push(product);
-    }
+    const { cards, categoryTitles } = await scrapeCardsFromPage(page);
+    const products = cards
+      .map(mapCardToProduct)
+      .filter((product): product is Product => Boolean(product));
+    const categoryOrder = categoryTitles.map(slugifyCategory);
 
     return {
       categories: groupTopByCategory(products, MAX_PRODUCTS_PER_CATEGORY),
+      categoryOrder,
     };
   } finally {
     await browser.close();
   }
 }
-
-export default scrapeBestSellers;
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
