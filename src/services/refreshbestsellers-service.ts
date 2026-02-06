@@ -10,7 +10,10 @@ export const refreshBestsellersService = async (
   if (payloadResult.ok === false) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ message: payloadResult.message }),
+      body: JSON.stringify({
+        message: 'Invalid request body.',
+        detail: payloadResult.message
+      }),
     };
   }
 

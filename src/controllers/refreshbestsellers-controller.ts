@@ -25,16 +25,23 @@ export const refreshBestsellersController = async (
     if (!INTERNAL_API_KEY) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: 'Missing API key.' })
+            body: JSON.stringify({ message: 'INTERNAL_API_KEY not set.' })
         };
     };
 
     const apiKey = getHeader(event.headers, 'x-api-key');
 
-    if (!apiKey || apiKey !== INTERNAL_API_KEY) {
+    if (!apiKey) {
         return {
             statusCode: 401,
-            body: JSON.stringify({ message: 'Unauthorized.' })
+            body: JSON.stringify({ message: 'Missing API key.' })
+        };
+    }
+
+    if (apiKey !== INTERNAL_API_KEY) {
+        return {
+            statusCode: 403,
+            body: JSON.stringify({ message: 'Forbidden.' })
         };
     };
 
