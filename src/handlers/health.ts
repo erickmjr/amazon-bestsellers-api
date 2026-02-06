@@ -1,8 +1,5 @@
-import { HttpResponse } from "src/helpers/httpResponse";
+import { healthController } from "src/controllers/health-controller"
 
-export const health = async (): Promise<HttpResponse> => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ status: "ok" }),
-  };
-};
+export const health = async () => {
+  return healthController();
+}
