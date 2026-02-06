@@ -1,3 +1,5 @@
+useDotenv: true
+
 service: amazon-bestsellers-api
 frameworkVersion: "3"
 
@@ -16,6 +18,7 @@ provider:
   region: sa-east-1
   environment:
     TABLE_NAME: ${self:custom.tableName}
+    INTERNAL_API_KEY: ${env:INTERNAL_API_KEY}
   iam:
     role:
       statements:
@@ -29,25 +32,25 @@ provider:
 plugins:
   - serverless-esbuild
 
-
 functions:
   health:
-    handler: src/handler.health
+    handler: src/handlers/health.health
     events:
       - httpApi:
           path: /health
           method: GET
   getBestsellers:
-    handler: src/handler.getBestsellers
+    handler: src/handlers/get-bestsellers.getBestsellers
     events: 
       - httpApi:
           path: /bestsellers
           method: GET
   refreshBestsellers:
-    handler: src/handler.refreshBestsellers
-    timeout: 30
+    handler: src/handlers/refresh-bestsellers.refreshBestsellers
     events:
-      - schedule: rate(12 hours)
+      - httpApi:
+          path: /internal/bestsellers/refresh
+          method: POST
 
 resources:
   Resources:
