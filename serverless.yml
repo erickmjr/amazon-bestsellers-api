@@ -45,6 +45,9 @@ functions:
       - httpApi:
           path: /bestsellers
           method: GET
+      - httpApi:
+          path: /bestsellers/{category}
+          method: GET
   refreshBestsellers:
     handler: src/handlers/refresh-bestsellers.refreshBestsellers
     events:
