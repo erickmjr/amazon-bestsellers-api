@@ -38,12 +38,7 @@ const slugifyCategory = (title: string) =>
 const parseNumberFromText = (raw?: string): number | undefined => {
   const text = normalizeText(raw);
   if (!text) return undefined;
-
-  const normalized = text
-    .replace(/[^\d,.-]/g, "")
-    .replace(/\./g, "")
-    .replace(",", ".");
-
+  const normalized = text.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
   const value = Number(normalized);
   return Number.isFinite(value) ? value : undefined;
 };
@@ -60,12 +55,8 @@ const parsePrice = (raw?: string): Product["price"] | undefined => {
 };
 
 const parseStars = (raw?: string) => {
-  const text = normalizeText(raw);
-  if (!text) return undefined;
-
-  const match = text.match(/(\d+(?:[.,]\d+)?)/);
+  const match = normalizeText(raw).match(/(\d+(?:[.,]\d+)?)/);
   if (!match) return undefined;
-
   const value = Number(match[1].replace(",", "."));
   return Number.isFinite(value) ? value : undefined;
 };
@@ -73,7 +64,6 @@ const parseStars = (raw?: string) => {
 const parseReviewCount = (raw?: string) => {
   const digits = normalizeText(raw).replace(/\D/g, "");
   if (!digits) return undefined;
-
   const value = Number(digits);
   return Number.isFinite(value) ? value : undefined;
 };
@@ -116,11 +106,13 @@ const groupTopByCategory = (
   return grouped;
 };
 
-const scrapeCardsFromPage = async (page: Page): Promise<ScrapedCard[]> => {
+type ScrapeResult = { cards: ScrapedCard[]; categoryTitles: string[] };
+
+const scrapeCardsFromPage = async (page: Page): Promise<ScrapeResult> => {
   await page.waitForSelector("h2.a-carousel-heading", { timeout: 20_000 });
 
   return page.evaluate(
-    (categoryPrefix: string, maxProductsPerCategory: number | undefined) => {
+    (categoryPrefix: string, maxProductsPerCategory: number) => {
       const headingSelector = "h2.a-carousel-heading";
       const carouselSelector = ".a-carousel-container";
       const cardSelector = "li.a-carousel-card div[data-asin]";
@@ -136,43 +128,50 @@ const scrapeCardsFromPage = async (page: Page): Promise<ScrapedCard[]> => {
         document.querySelectorAll<HTMLElement>(carouselSelector)
       );
 
-      return carousels.flatMap((carousel) => {
+      const result: ScrapeResult = { cards: [], categoryTitles: [] };
+
+      for (const carousel of carousels) {
         const headingText =
           carousel.querySelector<HTMLHeadingElement>(headingSelector)?.textContent ??
           "";
         const heading = headingText.trim();
 
-        if (!heading.startsWith(categoryPrefix)) return [];
+        if (!heading.startsWith(categoryPrefix)) continue;
 
         const categoryTitle = heading.replace(categoryPrefix, "").trim();
+        result.categoryTitles.push(categoryTitle);
         const cards = Array.from(
           carousel.querySelectorAll<HTMLDivElement>(cardSelector)
         ).slice(0, maxProductsPerCategory);
 
-        return cards.map((card, index) => {
-          const title = card.querySelector<HTMLElement>(titleSelector)?.textContent;
-          const link = card.querySelector<HTMLAnchorElement>(linkSelector)?.href;
-          const image = card.querySelector<HTMLImageElement>(imageSelector)?.src;
+        result.cards.push(
+          ...cards.map((card, index) => {
+            const title = card.querySelector<HTMLElement>(titleSelector)?.textContent;
+            const link = card.querySelector<HTMLAnchorElement>(linkSelector)?.href;
+            const image = card.querySelector<HTMLImageElement>(imageSelector)?.src;
 
-          const rankText =
-            card.querySelector<HTMLElement>(rankSelector)?.textContent ?? "";
-          const rankMatch = rankText.match(/\d+/);
+            const rankText =
+              card.querySelector<HTMLElement>(rankSelector)?.textContent ?? "";
+            const rankMatch = rankText.match(/\d+/);
 
-          return {
-            rank: rankMatch ? Number(rankMatch[0]) : index + 1,
-            title: title?.trim() ?? "",
-            href: link ?? "",
-            categoryTitle,
-            image,
-            priceText:
-              card.querySelector<HTMLElement>(priceSelector)?.textContent?.trim(),
-            starsText:
-              card.querySelector<HTMLElement>(starsSelector)?.textContent?.trim(),
-            reviewsText:
-              card.querySelector<HTMLElement>(reviewsSelector)?.textContent?.trim(),
-          };
-        });
-      });
+            return {
+              rank: rankMatch ? Number(rankMatch[0]) : index + 1,
+              title: title?.trim() ?? "",
+              href: link ?? "",
+              categoryTitle,
+              image,
+              priceText:
+                card.querySelector<HTMLElement>(priceSelector)?.textContent?.trim(),
+              starsText:
+                card.querySelector<HTMLElement>(starsSelector)?.textContent?.trim(),
+              reviewsText:
+                card.querySelector<HTMLElement>(reviewsSelector)?.textContent?.trim(),
+            };
+          })
+        );
+      }
+
+      return result;
     },
     CATEGORY_PREFIX,
     MAX_PRODUCTS_PER_CATEGORY
@@ -226,8 +225,8 @@ const sendData = async (
         typeof data === "string"
           ? data
           : data
-          ? JSON.stringify(data)
-          : error.message;
+            ? JSON.stringify(data)
+            : error.message;
 
       throw new Error(`Refresh failed (${status}): ${detail}`);
     }
@@ -261,4 +260,3 @@ if (require.main === module) {
     process.exitCode = 1;
   });
 }
-
