@@ -1,95 +1,152 @@
-# Serverless - AWS Node.js Typescript
+# Amazon Bestsellers API
 
-This project has been generated using the `aws-nodejs-typescript` template from the [Serverless framework](https://www.serverless.com/).
+API HTTP que expõe o **Top 3 de produtos por categoria** da página de mais vendidos da Amazon Brasil.
 
-For detailed instructions, please refer to the [documentation](https://www.serverless.com/framework/docs/providers/aws/).
+Os dados são servidos a partir do **último snapshot** persistido no DynamoDB (não é consulta em tempo real).
 
-## Installation/deployment instructions
+Stack: Node.js + TypeScript, AWS Lambda + API Gateway (HTTP API), DynamoDB, Serverless Framework e Puppeteer (scraper local).
 
-Depending on your preferred package manager, follow the instructions below to deploy your project.
+## Base URL (prod)
 
-> **Requirements**: NodeJS `lts/fermium (v.14.15.0)`. If you're using [nvm](https://github.com/nvm-sh/nvm), run `nvm use` to ensure you're using the same Node version in local and in your lambda's runtime.
+https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com
 
-### Using NPM
+## Consumo da API (Postman)
 
-- Run `npm i` to install the project dependencies
-- Run `npx sls deploy` to deploy this stack to AWS
+Endpoints públicos (sem autenticação):
 
-### Using Yarn
+- GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/health
+- GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers
+- GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/{category}
+  - Exemplo: https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/moda
+- GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/first-top
 
-- Run `yarn` to install the project dependencies
-- Run `yarn sls deploy` to deploy this stack to AWS
+## Códigos de resposta
 
-## Test your service
+- `GET /health`
+  - `200` — `{ "status": "ok" }`
 
-This template contains a single lambda function triggered by an HTTP request made on the provisioned API Gateway REST API `/hello` route with `POST` method. The request body must be provided as `application/json`. The body structure is tested by API Gateway against `src/functions/hello/schema.ts` JSON-Schema definition: it must contain the `name` property.
+- `GET /bestsellers`
+  - `200` — retorna o snapshot completo
+  - `204` — ainda não há snapshot salvo (`{ "message": "No content yet, run scraper." }`)
 
-- requesting any other path than `/hello` with any other method than `POST` will result in API Gateway returning a `403` HTTP error code
-- sending a `POST` request to `/hello` with a payload **not** containing a string property named `name` will result in API Gateway returning a `400` HTTP error code
-- sending a `POST` request to `/hello` with a payload containing a string property named `name` will result in API Gateway returning a `200` HTTP status code with a message saluting the provided name and the detailed event processed by the lambda
+- `GET /bestsellers/{category}`
+  - `200` — retorna somente a categoria solicitada
+  - `404` — categoria não encontrada no snapshot (`{ "message": "Not found." }`)
 
-> :warning: As is, this template, once deployed, opens a **public** endpoint within your AWS account resources. Anybody with the URL can actively execute the API Gateway endpoint and the corresponding lambda. You should protect this endpoint with the authentication method of your choice.
+- `GET /bestsellers/first-top`
+  - `200` — retorna somente a primeira categoria do snapshot
+  - `404` — snapshot não encontrado (`{ "message": "Not found." }`)
 
-### Locally
+## Exemplo de resposta
 
-In order to test the hello function locally, run the following command:
+Exemplo resumido (campos principais) do `GET /bestsellers`:
 
-- `npx sls invoke local -f hello --path src/functions/hello/mock.json` if you're using NPM
-- `yarn sls invoke local -f hello --path src/functions/hello/mock.json` if you're using Yarn
-
-Check the [sls invoke local command documentation](https://www.serverless.com/framework/docs/providers/aws/cli-reference/invoke-local/) for more information.
-
-### Remotely
-
-Copy and replace your `url` - found in Serverless `deploy` command output - and `name` parameter in the following `curl` command in your terminal or in Postman to test your newly deployed application.
-
-```
-curl --location --request POST 'https://myApiEndpoint/dev/hello' \
---header 'Content-Type: application/json' \
---data-raw '{
-    "name": "Frederic"
-}'
-```
-
-## Template features
-
-### Project structure
-
-The project code base is mainly located within the `src` folder. This folder is divided in:
-
-- `functions` - containing code base and configuration for your lambda functions
-- `libs` - containing shared code base between your lambdas
-
-```
-.
-├── src
-│   ├── functions               # Lambda configuration and source code folder
-│   │   ├── hello
-│   │   │   ├── handler.ts      # `Hello` lambda source code
-│   │   │   ├── index.ts        # `Hello` lambda Serverless configuration
-│   │   │   ├── mock.json       # `Hello` lambda input parameter, if any, for local invocation
-│   │   │   └── schema.ts       # `Hello` lambda input event JSON-Schema
-│   │   │
-│   │   └── index.ts            # Import/export of all lambda configurations
-│   │
-│   └── libs                    # Lambda shared code
-│       └── apiGateway.ts       # API Gateway specific helpers
-│       └── handlerResolver.ts  # Sharable library for resolving lambda handlers
-│       └── lambda.ts           # Lambda middleware
-│
-├── package.json
-├── serverless.ts               # Serverless service file
-├── tsconfig.json               # Typescript compiler configuration
-├── tsconfig.paths.json         # Typescript paths
-└── webpack.config.js           # Webpack configuration
+```json
+{
+  "sourceUrl": "https://www.amazon.com.br/bestsellers",
+  "updatedAt": "<ISO_DATETIME>",
+  "categoryOrder": ["moda"],
+  "categories": {
+    "moda": [{ "rank": 1, "title": "Produto...", "href": "https://www.amazon.com.br/..." }]
+  }
+}
 ```
 
-### 3rd party libraries
+## Modelo de dados
 
-- [json-schema-to-ts](https://github.com/ThomasAribart/json-schema-to-ts) - uses JSON-Schema definitions used by API Gateway for HTTP request validation to statically generate TypeScript types in your lambda's handler code base
-- [middy](https://github.com/middyjs/middy) - middleware engine for Node.Js lambda. This template uses [http-json-body-parser](https://github.com/middyjs/middy/tree/master/packages/http-json-body-parser) to convert API Gateway `event.body` property, originally passed as a stringified JSON, to its corresponding parsed object
-- [@serverless/typescript](https://github.com/serverless/typescript) - provides up-to-date TypeScript definitions for your `serverless.ts` service file
+### Product
 
-### Advanced usage
+Campos obrigatórios:
 
-Any tsconfig.json can be used, but if you do, set the environment variable `TS_NODE_CONFIG` for building the application, eg `TS_NODE_CONFIG=./tsconfig.app.json npx serverless webpack`
+- `rank` (number)
+- `title` (string)
+- `href` (string)
+
+Campos opcionais (quando disponíveis no scrape):
+
+- `image` (string)
+- `category` (string)
+- `price` (`{ raw?: string, value?: number, currency?: string }`)
+- `rating` (`{ stars?: number, reviewsCount?: number, rawStarsText?: string }`)
+
+### Categorias (slugs)
+
+Os slugs são gerados a partir do título da categoria (sem acento, minúsculo e com hífens).
+Exemplos: `cozinha`, `moda`, `moveis`, `alimentos-e-bebidas`, `ferramentas-e-materiais-de-construcao`, `esporte`.
+
+## Atualização dos dados (via scraper local)
+
+> Esta seção é para o mantenedor atualizar o snapshot. Para somente consumir a API, não é necessário.
+
+Se a API estiver retornando `204` no `GET /bestsellers`, rode o scraper localmente para coletar os dados e popular o DynamoDB.
+
+### 1) Configuração
+
+Pré-requisitos:
+
+- Node.js 18+
+- `.env` (baseado em `.env.example`) com:
+  - `INTERNAL_API_KEY=...`
+  - `REFRESH_URL=https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/internal/bestsellers/refresh`
+
+### 2) Executar o scraper
+
+- `npm install`
+- `npm run scrape`
+
+### Endpoint interno do refresh
+
+- POST - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/internal/bestsellers/refresh
+  - Header obrigatório: `x-api-key: <INTERNAL_API_KEY>`
+
+Payload:
+
+- `categoryOrder`: string[] (ordem das categorias)
+- `categories`: objeto `{ [slug]: Product[] }`
+
+Exemplo:
+
+```json
+{
+  "categoryOrder": ["moda"],
+  "categories": {
+    "moda": [
+      { "rank": 1, "title": "Produto...", "href": "https://www.amazon.com.br/..." }
+    ]
+  }
+}
+```
+
+## Visão técnica (arquitetura e decisões)
+
+### Stack
+
+- Node.js 18 + TypeScript
+- AWS Lambda + API Gateway (HTTP API)
+- DynamoDB
+- Serverless Framework v3 + `serverless-esbuild`
+- Puppeteer (scraper local)
+- AWS SDK v3 (DynamoDB)
+
+### Arquitetura do código
+
+- `src/handlers`: entrypoints das Lambdas (rotas do HTTP API)
+- `src/controllers`: validação de entrada, tratamento de erros e respostas HTTP
+- `src/services`: regras de negócio
+- `src/repositories`: acesso ao DynamoDB (Get/Put do snapshot)
+- `src/scripts`: execução do scraper local (Puppeteer)
+
+### Infra (Serverless + DynamoDB)
+
+- Rotas HTTP, funções e tabela DynamoDB são definidas em `serverless.yml`.
+- Tabela por stage (`amazon-bestsellers-api-bestsellers-<stage>`), com um item `latest`:
+  - `pk`: `source#amazon`
+  - `sk`: `latest`
+  - `categories`, `categoryOrder`, `sourceUrl`, `updatedAt`
+- O segredo `INTERNAL_API_KEY` é injetado via env (`useDotenv: true`) e protege o endpoint interno de refresh.
+
+### Decisões técnicas
+
+- Endpoint interno de ingestão (`POST /internal/bestsellers/refresh`) separado dos endpoints públicos de leitura.
+- Persistência de `categoryOrder`: o DynamoDB não garante ordem de mapas, categoryOrder preserva a ordem do site.
+- Scraper fora da AWS por design e para evitar rodar Chromium dentro da Lambda.
