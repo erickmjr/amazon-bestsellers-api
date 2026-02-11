@@ -5,22 +5,22 @@ export type OverviewModel = {
     updatedAt: string;
     totalProducts: number;
     stars: {
-        min: number | null;
-        max: number | null;
+        lower: number | null;
+        higher: number | null;
         avg: number | null;
-        count: number;
+        sum: number;
     }
     price: {
-        min: number | null;
-        max: number | null;
+        lower: number | null;
+        higher: number | null;
         avg: number | null;
-        count: number;
+        sum: number;
     }
     reviews: {
-        min: number | null;
-        max: number | null;
+        lower: number | null;
+        higher: number | null;
         avg: number | null;
-        count: number;
+        sum: number;
     }
 }
 

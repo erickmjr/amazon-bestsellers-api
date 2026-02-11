@@ -92,9 +92,9 @@ export const getBestsellersOverviewService = async (): Promise<HttpResponse> => 
 
         let totalProducts = 0;
 
-        let starsSum = 0, starsCount = 0, starsMin: number | null = null, starsMax: number | null = null;
-        let priceSum = 0, priceCount = 0, priceMin: number | null = null, priceMax: number | null = null;
-        let reviewsSum = 0, reviewsCount = 0, reviewsMin: number | null = null, reviewsMax: number | null = null;
+        let starsSum = 0, starsCount = 0, starsLower: number | null = null, starsHigher: number | null = null;
+        let priceSum = 0, priceCount = 0, priceLower: number | null = null, priceHigher: number | null = null;
+        let reviewsSum = 0, reviewsCount = 0, reviewsLower: number | null = null, reviewsHigher: number | null = null;
 
         for (const products of Object.values(allBestsellers.categories)) {
             totalProducts += products.length;
@@ -104,24 +104,24 @@ export const getBestsellersOverviewService = async (): Promise<HttpResponse> => 
                 if (typeof stars === "number") {
                     starsSum += stars;
                     starsCount++;
-                    starsMin = starsMin === null ? stars : Math.min(starsMin, stars);
-                    starsMax = starsMax === null ? stars : Math.max(starsMax, stars);
+                    starsLower = starsLower === null ? stars : Math.min(starsLower, stars);
+                    starsHigher = starsHigher === null ? stars : Math.max(starsHigher, stars);
                 }
 
                 const price = product.price?.value;
                 if (typeof price === "number") {
                     priceSum += price;
                     priceCount++;
-                    priceMin = priceMin === null ? price : Math.min(priceMin, price);
-                    priceMax = priceMax === null ? price : Math.max(priceMax, price);
+                    priceLower = priceLower === null ? price : Math.min(priceLower, price);
+                    priceHigher = priceHigher === null ? price : Math.max(priceHigher, price);
                 }
 
                 const reviews = product.rating?.reviewsCount;
                 if (typeof reviews === "number") {
                     reviewsSum += reviews;
                     reviewsCount++;
-                    reviewsMin = reviewsMin === null ? reviews : Math.min(reviewsMin, reviews);
-                    reviewsMax = reviewsMax === null ? reviews : Math.max(reviewsMax, reviews);
+                    reviewsLower = reviewsLower === null ? reviews : Math.min(reviewsLower, reviews);
+                    reviewsHigher = reviewsHigher === null ? reviews : Math.max(reviewsHigher, reviews);
                 }
             }
         }
@@ -131,22 +131,22 @@ export const getBestsellersOverviewService = async (): Promise<HttpResponse> => 
             updatedAt: allBestsellers.updatedAt,
             totalProducts,
             stars: {
-                min: starsMin,
-                max: starsMax,
+                lower: starsLower,
+                higher: starsHigher,
                 avg: starsCount ? Number((starsSum / starsCount).toFixed(2)) : null,
-                count: starsCount
+                sum: starsSum
             },
             price: {
-                min: priceMin,
-                max: priceMax,
+                lower: priceLower,
+                higher: priceHigher,
                 avg: priceCount ? Number((priceSum / priceCount).toFixed(2)) : null,
-                count: priceCount
+                sum: priceSum
             },
             reviews: {
-                min: reviewsMin,
-                max: reviewsMax,
+                lower: reviewsLower,
+                higher: reviewsHigher,
                 avg: reviewsCount ? Number((reviewsSum / reviewsCount).toFixed(2)) : null,
-                count: reviewsCount
+                sum: reviewsSum
             }
         }
 
