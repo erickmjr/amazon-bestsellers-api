@@ -134,19 +134,19 @@ export const getBestsellersOverviewService = async (): Promise<HttpResponse> => 
                 lower: starsLower,
                 higher: starsHigher,
                 avg: starsCount ? Number((starsSum / starsCount).toFixed(2)) : null,
-                sum: starsSum
+                sum: Number(starsSum.toFixed(2))
             },
             price: {
                 lower: priceLower,
                 higher: priceHigher,
                 avg: priceCount ? Number((priceSum / priceCount).toFixed(2)) : null,
-                sum: priceSum
+                sum: Number(priceSum.toFixed(2))
             },
             reviews: {
                 lower: reviewsLower,
                 higher: reviewsHigher,
                 avg: reviewsCount ? Number((reviewsSum / reviewsCount).toFixed(2)) : null,
-                sum: reviewsSum
+                sum: Number(reviewsSum.toFixed(2))
             }
         }
 
