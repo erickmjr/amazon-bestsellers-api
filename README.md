@@ -19,6 +19,7 @@ Endpoints públicos (sem autenticação):
 - GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/{category}
   - Exemplo: https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/moda
 - GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/first-top
+- GET - https://ycnxze6fzj.execute-api.sa-east-1.amazonaws.com/bestsellers/overview
 
 ## Códigos de resposta
 
@@ -37,6 +38,10 @@ Endpoints públicos (sem autenticação):
   - `200` — retorna somente a primeira categoria do snapshot
   - `404` — snapshot não encontrado (`{ "message": "Not found." }`)
 
+- `GET /bestsellers/overview`
+  - `200` — retorna um resumo agregado do snapshot
+  - `204` — ainda não há snapshot salvo (`{ "message": "No content yet, run scraper." }`)
+
 ## Exemplo de resposta
 
 Exemplo resumido (campos principais) do `GET /bestsellers`:
@@ -49,6 +54,19 @@ Exemplo resumido (campos principais) do `GET /bestsellers`:
   "categories": {
     "moda": [{ "rank": 1, "title": "Produto...", "href": "https://www.amazon.com.br/..." }]
   }
+}
+```
+
+Exemplo resumido (campos principais) do `GET /bestsellers/overview`:
+
+```json
+{
+  "categoryOrder": ["moda"],
+  "updatedAt": "<ISO_DATETIME>",
+  "totalProducts": 12,
+  "stars": { "lower": 3.2, "higher": 4.9, "avg": 4.2, "sum": 50.4 },
+  "price": { "lower": 12.9, "higher": 199.9, "avg": 78.3, "sum": 939.6 },
+  "reviews": { "lower": 1, "higher": 5234, "avg": 802.5, "sum": 9630 }
 }
 ```
 
@@ -73,6 +91,17 @@ Campos opcionais (quando disponíveis no scrape):
 
 Os slugs são gerados a partir do título da categoria (sem acento, minúsculo e com hífens).
 Exemplos: `cozinha`, `moda`, `moveis`, `alimentos-e-bebidas`, `ferramentas-e-materiais-de-construcao`, `esporte`.
+
+### Overview
+
+Campos principais do `GET /bestsellers/overview`:
+
+- `categoryOrder` (string[])
+- `updatedAt` (string ISO)
+- `totalProducts` (number)
+- `stars` (`{ lower: number | null, higher: number | null, avg: number | null, sum: number }`)
+- `price` (`{ lower: number | null, higher: number | null, avg: number | null, sum: number }`)
+- `reviews` (`{ lower: number | null, higher: number | null, avg: number | null, sum: number }`)
 
 ## Atualização dos dados (via scraper local)
 
