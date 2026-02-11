@@ -57,13 +57,18 @@ functions:
       - httpApi:
           path: /bestsellers/first-top
           method: GET
+  getBestsellersOverview:
+    handler: src/handlers/get-bestsellers.getBestsellersOverview
+    events:
+      - httpApi:
+          path: /bestsellers/overview
+          method: GET
   refreshBestsellers:
     handler: src/handlers/refresh-bestsellers.refreshBestsellers
     events:
       - httpApi:
           path: /internal/bestsellers/refresh
           method: POST
-
 resources:
   Resources:
     BestsellersTable:

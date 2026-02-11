@@ -45,7 +45,7 @@ export const getBestsellersByCategoryController = async (event: APIGatewayProxyE
     }
 };
 
-export const getFirstTopBestsellersController = async () => {
+export const getFirstTopBestsellersController = async (): Promise<HttpResponse> => {
     try {
 
         const response = await getBestsellersServices.getFirstTopBestsellersService();
@@ -62,3 +62,21 @@ export const getFirstTopBestsellersController = async () => {
         }
     }
 };
+
+export const getBestsellersOverviewController = async (): Promise<HttpResponse> => {
+    try {
+
+        const response = await getBestsellersServices.getBestsellersOverviewService();
+
+        return {
+            statusCode: response.statusCode,
+            body: response.body
+        }
+
+    } catch {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: 'Internal server error.' })
+        }
+    }
+}
